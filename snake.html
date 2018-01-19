@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<meta http-equiv="X-UA-Compatible" content="ie=edge" />
+	<title>贪吃蛇</title>
+	<style type="text/css">
+		/*最大容器样式*/
+		.wrap{
+			font-size: 0;
+			width: 540px;
+			height: 540px;
+			border: 1px solid red;
+			margin: 150px auto;
+		}
+		#gameOver,#startGame,#zwyc{
+			position: absolute;
+			margin: 240px 150px;
+			font-size: 50px;
+			font-weight: bolder;
+			color: white;
+			display: none;
+		}
+		#zwyc{
+			margin-top: 300px;
+		}
+		#startGame{
+			display: block;
+		}
+		#score{
+			font-size: 20px;
+			position: absolute;
+			top: 130px;
+			color: black;
+		}
+	</style>
+</head>
+<body>
+	<!--最大容器-->
+	<div class="wrap">
+		<div id="startGame">开始游戏</div>
+		<div id="gameOver">游戏结束</div>
+		<div id="zwyc">再玩一局</div>
+		<div id="score">得分:0</div>
+	</div>
+</body>
+<script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+<script type="text/javascript">
+	//声明变量
+	var divArr = [];//创建每个小格子所在的数组
+	var snakeArr = [];//创建蛇身体所在的数组
+	var i;//声明变量i用于控制蛇在哪一行运行
+	var j;//声明变量j用于控制蛇在哪一列运行
+	var snake_offal = [];//蛇数组第一个元素
+	var time1;//向右运动的计时器的名称
+	var time2;//向下运动的计时器的名称
+	var time3;
+	var time4;
+	var b = [];//声明变量使蛇不能反向走
+	var doudou;//声明豆豆
+	var h = 0;//声明变量控制循环使生成食物不在蛇身上
+	var eatchang;//声明吃豆后边长新的蛇数组
+	var score = 0;//分数
+	//创建二维数组画出小方格
+	for(i = 0;i < 20;i++){//创建行
+		var divArr1 = [];
+		for(j = 0;j < 20;j++){//创建列
+			var newDiv = $('<div></div>')//创建小格子
+			//写每个小盒子的样式
+			$(newDiv).css({
+				'width':'25px',
+				'height':'25px',
+				'background':'black',
+				'display':'inline-block',
+				'border':'1px solid gray'
+			});
+			//将新创建的div放入列
+			divArr1.push(newDiv[0]);
+			$('.wrap').append(newDiv);
+		}
+		//给每一列中创建行div
+		divArr.push(divArr1);
+	}
+	
+	//画出初始蛇
+	function snake(){
+		i = 0;
+		for(j = 0;j < 3;j++){//设定蛇的初始长度为3
+			snakeArr.push(divArr[i][j]);//设置蛇的身体数组
+			yellowSnake();
+		}
+	}
+	
+	
+	
+	//让蛇的身体变色
+	function yellowSnake(){
+		for(var h = 0;h < snakeArr.length;h++){
+			if(snakeArr[snakeArr.length - 1] == undefined){//判断是否撞墙
+				die();
+				return false;
+			}else{
+				snakeArr[h].style.background = 'yellow';//设置蛇的身体颜色
+			}
+			
+		}
+	}
+	
+	//创建蛇尾(蛇数组第一个元素)走过形成的新数组
+	function snakeOffal(){
+		snake_offal.push(snakeArr[0]);
+	}
+	
+	//让蛇走过的位置变黑
+	function walkBlack(){
+			snake_offal[snake_offal.length - 1].style.background = 'black';
+	}
+	
+	//生成[0-20)的随机数
+	function randomNum(x,y){
+		return Math.round(Math.random() * (y - x) + x);
+	}
+	
+	//生成随机食物
+//	var fx,fy;
+	function food() {
+//		fx = randomNum(0,19);
+//		fy = randomNum(0,19);
+//		if($.inArray(divArr[fy][fx], snakeArr) == -1) {
+//			divArr[fy][fx].style.background = 'blue';
+//		} 
+		while(h < snakeArr.length){
+			doudou = divArr[randomNum(0,19)][randomNum(0,19)];
+//			console.log(doudou);
+			if(snakeArr[h] !== doudou) {
+				doudou.style.background = 'pink';
+				return doudou;
+			}
+		}
+
+	}
+	
+	
+	//游戏结束函数
+	function die() {
+		clearInterval(time1);
+		clearInterval(time2);
+		clearInterval(time3);
+		clearInterval(time4);
+		snakeArr = [];
+		i = 0;
+		j = 0;
+		b = [];
+		snake_offal = [];
+		
+		for(i = 0;i < 20;i++){//创建行
+			for(j = 0;j < 20;j++){//创建列
+				divArr[i][j].style.background = 'black';
+			}
+		}
+		
+		$('#gameOver').css('display','block');
+		$('#zwyc').css('display','block');
+		for(var h = 0;h < snakeArr.length - 1;h++){
+			console.log(snakeArr[h]);
+			snakeArr[h].style.background = 'black';
+		}
+		doudou.style.background = 'black';
+		
+	}
+	//碰到自己身体死函数
+	function zs(){
+		for(var h = 0;h < snakeArr.length - 2;h++){
+			if(snakeArr[snakeArr.length - 1] === snakeArr[h]){
+				die();
+			}
+		}
+		
+	}
+	//创建吃食物蛇身体边长的函数
+	function eat(){
+		if(snakeArr[snakeArr.length - 1] === doudou){
+			score++;
+			$('#score').text('得分:' + score);
+			snakeArr.push(divArr[i][snakeArr.length + j]);
+			yellowSnake();
+			food();
+			j -= 1;
+		}
+	}
+
+	//创建蛇移动的函数
+	function moveSnake(){
+		i = 0;
+		j = 0;
+		document.onkeydown = function(){
+			var e = event || window.event;
+			b.push(e.keyCode);
+			switch(e.keyCode){
+				//向右跑
+				case 39:
+					if(b[b.length - 2] - b[b.length - 1] != -2 && b[b.length - 2] - b[b.length - 1] != 0){
+						clearInterval(time1);
+						clearInterval(time2);
+						clearInterval(time3);
+						clearInterval(time4);
+							time1 = setInterval(function(){
+								j++;
+								snakeOffal();//获取蛇数组第一个元素
+								walkBlack();//让蛇数组走过的元素变黑
+								snakeArr.shift(snakeArr[0]);//删除蛇数组第一个元素
+								eat();
+								snakeArr.push(divArr[i][snakeArr.length + j]);//给蛇数组添加将要走的元素
+								yellowSnake();//让下一个位置变黄
+								zs();
+							},200);
+							break;
+					}
+				
+				//向下跑
+				case 40:
+					if(b[b.length - 2] - b[b.length - 1] != -2 && b[b.length - 2] - b[b.length - 1] != 0){
+						clearInterval(time1);
+						clearInterval(time2);
+						clearInterval(time3);
+						clearInterval(time4);
+							time2 = setInterval(function(){
+								i++;
+								snakeOffal();
+								walkBlack();
+								snakeArr.shift(snakeArr[0]);
+								eat();
+								if(i == 20){
+									die();
+								}else{
+									snakeArr.push(divArr[i][snakeArr.length + j]);
+								}
+								yellowSnake();
+								zs();
+							},200);
+							break;
+					}
+				
+				//向左跑
+				case 37:
+					if(b[b.length - 2] - b[b.length - 1] != 2 && b[b.length - 2] - b[b.length - 1] != 0){
+						clearInterval(time1);
+						clearInterval(time2);
+						clearInterval(time3);
+						clearInterval(time4);
+							time3 = setInterval(function(){
+								j--;
+								snakeOffal();
+								walkBlack();
+								snakeArr.shift(snakeArr[0]);
+								eat();
+								snakeArr.push(divArr[i][snakeArr.length + j]);
+								yellowSnake();
+								zs();
+							},200);
+							break;
+					}
+				//向上跑
+				case 38:
+					if(b[b.length - 2] - b[b.length - 1] != 2 && b[b.length - 2] - b[b.length - 1] != 0){
+						clearInterval(time1);
+						clearInterval(time2);
+						clearInterval(time3);
+						clearInterval(time4);
+							time4 = setInterval(function(){
+								i--;
+								snakeOffal();
+								walkBlack();
+								snakeArr.shift(snakeArr[0]);
+								eat();
+								if(i == -1){
+									die();
+								}else{
+									snakeArr.push(divArr[i][snakeArr.length + j]);
+								}
+								yellowSnake();
+								zs();
+							},200);
+							break;
+					}
+			}
+		}
+	}
+	
+	$('#startGame').click(function(){
+		snake();
+		food();
+		moveSnake();
+		$('#startGame').css('display','none');
+	});
+	$('#zwyc').click(function(){
+		snakeArr = [];
+		score = 0;
+		i = 0;
+		j = 0;
+		$('#score').text('得分:0');
+		snake();
+		food();
+		moveSnake();
+		$('#gameOver').css('display','none');
+		$('#zwyc').css('display','none');
+	});
+</script>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
